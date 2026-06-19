@@ -9,6 +9,8 @@ spring:
     mongodb:
       uri: mongodb://admin:admin@localhost:27017/notifications?authSource=admin
   kafka:
+    topics:
+      orders: "order-notification"
     bootstrap-servers: localhost:9092
     consumer:
       group-id: notification-group
@@ -18,7 +20,7 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.use.type.headers: false
-        spring.json.value.default.type: "com.example.notificationservice.dto.OrderEvent"
+        spring.json.value.default.type: "com.example.notificationservice.dto.NotificationEvent"
     listener:
       ack-mode: RECORD
 application:

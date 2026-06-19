@@ -5,21 +5,14 @@ spring:
   application:
     name: user-service
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/orders_db
+keycloak:
+  server-url: http://localhost:8080
+  realm: user_service
+  client-id: springBootApplication
+  client-secret: KGgfgCKmtW8fExfSwDt9wJLqkFT6xCpY
+  admin:
     username: admin
     password: admin
-    driver-class-name: org.postgresql.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update   # TODO: заменить на validate + Flyway
-    show-sql: true
-    properties:
-      hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-
-  flyway:
-    enabled: false       # TODO: включить и добавить миграции в db/migration/
 
 eureka:
   client:

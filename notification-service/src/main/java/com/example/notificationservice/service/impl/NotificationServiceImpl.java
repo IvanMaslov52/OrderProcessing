@@ -1,9 +1,16 @@
 package com.example.notificationservice.service.impl;
 
+import com.example.notificationservice.dto.NotificationCount;
 import com.example.notificationservice.dto.NotificationDto;
-import com.example.notificationservice.dto.OrderEvent;
+import com.example.notificationservice.dto.NotificationEvent;
+import com.example.notificationservice.dto.NotificationResponse;
+import com.example.notificationservice.exception.InvalidReadException;
+import com.example.notificationservice.exception.NotificationNotFoundException;
+import com.example.notificationservice.model.EventType;
 import com.example.notificationservice.model.OrderNotification;
+import com.example.notificationservice.model.OrderStatus;
 import com.example.notificationservice.repository.NotificationRepository;
+import com.example.notificationservice.service.NotificationMapper;
 import com.example.notificationservice.service.NotificationService;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,81 +29,108 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
 
+    private final NotificationMapper mapper;
+
     @Override
-    public void saveNotification(OrderEvent orderEvent) {
-        OrderNotification newOrderNotification = eventToNotification(orderEvent);
+    public void saveNotification(NotificationEvent notificationEvent) {
+        if(notificationRepository.existsByOrderIdAndEventType(notificationEvent.getOrderId(), setEventTypeByStatus(notificationEvent.getStatus()))) {
+            log.warn("Дубликат события: orderId:{}", notificationEvent.getOrderId());
+            return;
+        }
+        OrderNotification newOrderNotification = eventToNotification(notificationEvent);
         OrderNotification savedOrderNotification = notificationRepository.save(newOrderNotification);
         log.info("Сохранение  уведомления о заказе OrderNotification={}", savedOrderNotification);
     }
 
     @Override
-    public OrderNotification eventToNotification(OrderEvent orderEvent) {
+    public OrderNotification eventToNotification(NotificationEvent notificationEvent) {
         return OrderNotification.builder()
-                .orderId(orderEvent.getOrderId())
-                .userId(orderEvent.getUserId())
-                .title(formattedTitle(orderEvent.getStatus(), orderEvent.getProduct()))
-                .message(formattedMessage(orderEvent.getStatus(), orderEvent.getProduct(), orderEvent.getTotalPrice()))
+                .orderId(notificationEvent.getOrderId())
+                .userId(notificationEvent.getUserId())
+                .title(formattedTitle(notificationEvent.getStatus().name(), notificationEvent.getProduct()))
+                .message(formattedMessage(notificationEvent.getStatus().name(), notificationEvent.getProduct(), notificationEvent.getTotalPrice()))
+                .eventType(setEventTypeByStatus(notificationEvent.getStatus()))
                 .read(false)
                 .createdAt(LocalDateTime.now()).build();
     }
 
     @Override
     public String formattedTitle(String status, String product) {
-        switch (status){
-            case "PENDING":
-                return "Creating an order for a product:" + product;
-            case "CONFIRMED":
-                return "Confirmed order for a product:" + product;
-            case "CANCELLED":
-                return "Cancelled order for a product:" + product;
-            default:
-                return "Unknown status";
-        }
+        return switch (status) {
+            case "PENDING" -> "Creating an order for a product:" + product;
+            case "CONFIRMED" -> "Confirmed order for a product:" + product;
+            case "CANCELLED" -> "Cancelled order for a product:" + product;
+            default -> "Unknown status";
+        };
     }
 
     @Override
     public String formattedMessage(String status, String product, BigDecimal totalPrice) {
-        switch (status){
-            case "PENDING":
-                return "Order for a product:" + product + " on price: " + totalPrice + " with a pending status has been created.";
-            case "CONFIRMED":
-                return "Order for a product:" + product + " on price: " + totalPrice + " has been confirmed.";
-            case "CANCELLED":
-                return "Order for a product:" + product + " on price: " + totalPrice + " has been canceled.";
-            default:
-                return "Unknown status";
-        }
+        return switch (status) {
+            case "PENDING" ->
+                    "Order for a product:" + product + " on price: " + totalPrice + " with a pending status has been created.";
+            case "CONFIRMED" -> "Order for a product:" + product + " on price: " + totalPrice + " has been confirmed.";
+            case "CANCELLED" -> "Order for a product:" + product + " on price: " + totalPrice + " has been canceled.";
+            default -> "Unknown status";
+        };
     }
 
     @Override
     public NotificationDto getNotificationById(String id) {
-        return notificationToDto(notificationRepository.findById(id).orElseThrow(NotFoundException::new));
+        return mapper.notificationToDto(notificationRepository.findById(id).orElseThrow(() -> new NotificationNotFoundException(id)));
     }
 
     @Override
     public List<NotificationDto> getNotificationByUserId(Long userId) {
         return notificationRepository.findByUserId(userId).stream()
-                .map(this::notificationToDto)
+                .map(mapper::notificationToDto)
                 .toList();
     }
 
     @Override
     public List<NotificationDto> getUnreadNotificationByUserId(Long userId) {
         return notificationRepository.findByUserId(userId).stream()
-                .sorted(Comparator.comparing(OrderNotification::getCreatedAt))
-                .map(this::notificationToDto)
                 .filter(orderNotification -> !orderNotification.getRead())
+                .sorted(Comparator.comparing(OrderNotification::getCreatedAt))
+                .map(mapper::notificationToDto)
                 .toList();
     }
 
     @Override
-    public NotificationDto notificationToDto(OrderNotification notification) {
-        return NotificationDto.builder()
-                .orderId(notification.getOrderId())
-                .userId(notification.getUserId())
-                .title(notification.getTitle())
-                .message(notification.getMessage())
-                .read(notification.getRead())
-                .build();
+    public NotificationCount getUnreadNotificationCountByUserId(Long userId) {
+        return new NotificationCount(notificationRepository.findByUserId(userId)
+                .stream()
+                .filter(n-> !n.getRead()).count());
+    }
+
+    @Override
+    public NotificationResponse readNotificationById(String id) {
+        OrderNotification orderNotification = notificationRepository.findById(id).orElseThrow(() -> new NotificationNotFoundException(id));
+        if(orderNotification.getRead()) {
+            throw new InvalidReadException();
+        }
+        orderNotification.setRead(true);
+        OrderNotification savedNotification = notificationRepository.save(orderNotification);
+        return mapper.notificationToResponse(savedNotification);
+    }
+
+    @Override
+    public NotificationCount readAllNotificationByUserId(Long userId) {
+        List<OrderNotification> updatedList =
+                notificationRepository.findByUserId(userId).stream()
+                .filter(OrderNotification::getRead)
+                .peek(n-> n.setRead(true))
+                .sorted(Comparator.comparing(OrderNotification::getCreatedAt))
+                .toList();
+        return new NotificationCount(((long) notificationRepository.saveAll(updatedList).size()));
+    }
+
+    @Override
+    public EventType setEventTypeByStatus(OrderStatus status) {
+        return switch (status) {
+            case CONFIRMED -> EventType.ORDER_CONFIRMED;
+            case CANCELLED -> EventType.ORDER_CANCELED;
+            default -> EventType.ORDER_CREATED;
+        };
     }
 }

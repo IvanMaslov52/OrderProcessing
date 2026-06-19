@@ -1,6 +1,5 @@
 package com.example.orderservice.model;
 
-import com.example.orderservice.dto.OrderDto;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,7 +20,7 @@ public class Order {
     private Long orderId;
 
     @Column(name = "user_id")
-    private Integer userId;
+    private Long userId;
 
     @Column(name = "product")
     private String product;
@@ -39,12 +38,8 @@ public class Order {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    public Order(OrderDto orderDto) {
-        this.userId = orderDto.getUserId();
-        this.product = orderDto.getProduct();
-        this.quantity = orderDto.getQuantity();
-        this.totalPrice = orderDto.getTotalPrice();
-        this.status = OrderStatus.PENDING;
-        this.createdAt = LocalDateTime.now();
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
     }
 }
