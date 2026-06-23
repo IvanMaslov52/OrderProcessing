@@ -9,6 +9,9 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.TokenVerifier;
+import org.keycloak.common.VerificationException;
+import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,11 +96,7 @@ public class KeycloakService {
                     throw new InvalidCredentialsException();
                 })
                 .bodyToMono(Map.class)
-                .map(response -> TokenResponse.builder()
-                        .accessToken((String) response.get("access_token"))
-                        .refreshToken((String) response.get("refresh_token"))
-                        .expiresIn(((Number) response.get("expires_in")).longValue())
-                        .build());
+                .map(this::buildTokenResponse);
     }
 
     public void changePassword(String keycloakId, String newPassword) {
@@ -155,5 +154,30 @@ public class KeycloakService {
         }
 
         return Long.parseLong(attributes.get("userId").get(0));
+    }
+
+    private TokenResponse buildTokenResponse(Map<String, Object> response) {
+        String accessToken = (String) response.get("access_token");
+        String refreshToken = (String) response.get("refresh_token");
+        long expiresIn = ((Number) response.get("expires_in")).longValue();
+        String userId = extractUserId(accessToken);
+        return TokenResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .expiresIn(expiresIn)
+                .keycloakId(userId)
+                .build();
+
+    }
+
+    private String extractUserId(String accessToken) {
+        try {
+            AccessToken token = TokenVerifier
+                    .create(accessToken, AccessToken.class)
+                    .getToken();
+            return token.getSubject();
+        } catch (VerificationException e) {
+            throw new RuntimeException("Failed to parse access token", e);
+        }
     }
 }
