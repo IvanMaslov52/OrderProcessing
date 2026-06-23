@@ -26,10 +26,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
     command: redis-server --requirepass admin
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis_data:/data
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0

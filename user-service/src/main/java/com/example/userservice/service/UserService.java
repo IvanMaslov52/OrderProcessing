@@ -1,16 +1,15 @@
 package com.example.userservice.service;
 
-import com.example.userservice.dto.UserDto;
-import com.example.userservice.dto.UserResponseDto;
+import com.example.userservice.dto.*;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
 
 public interface UserService {
-    List<UserResponseDto> findAll();
+    UserResponseDto registerUser(RegisterRequest registerRequest);
 
-    UserResponseDto findById(Long userId);
+    Mono<TokenResponse> authorization(LoginRequest loginRequest);
 
-    UserResponseDto findByKeyCloakId(String keyClockId);
+    UserResponseDto updatePassword(UpdatePasswordRequest updatePasswordRequest);
 
-    UserResponseDto create(UserDto dto);
+    UserResponseDto updateUsername(UpdateUsernameRequest updateUsernameRequest);
 }

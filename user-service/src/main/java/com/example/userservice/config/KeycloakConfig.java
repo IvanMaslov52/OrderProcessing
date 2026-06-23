@@ -1,23 +1,20 @@
 package com.example.userservice.config;
 
+import com.google.common.net.HttpHeaders;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
-public class SecurityConfig {
+public class KeycloakConfig {
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
-
-    @Value("${keycloak.realm}")
-    private String realm;
 
     @Value("${keycloak.admin.username}")
     private String adminUsername;
@@ -38,13 +35,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http)
-            throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                )
+    public WebClient keycloakWebClient() {
+        return WebClient.builder()
+                .baseUrl(serverUrl)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE,
+                        MediaType.APPLICATION_FORM_URLENCODED_VALUE)
                 .build();
     }
 }

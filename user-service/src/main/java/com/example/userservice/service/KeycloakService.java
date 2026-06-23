@@ -1,0 +1,159 @@
+package com.example.userservice.service;
+
+import com.example.userservice.dto.TokenResponse;
+import com.example.userservice.dto.UserResponseDto;
+import com.example.userservice.exception.InvalidCredentialsException;
+import com.example.userservice.exception.UserKeyClockAlreadyExistException;
+import com.example.userservice.exception.UserNotFoundException;
+import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.keycloak.admin.client.Keycloak;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class KeycloakService {
+    private final Keycloak keycloak;
+
+    private final WebClient webClient;
+
+    @Value("${keycloak.realm}")
+    private String realm;
+
+    @Value("${keycloak.client-id}")
+    private String clientId;
+
+    @Value("${keycloak.client-secret}")
+    private String clientSecret;
+
+    public String createUser(String email, String name, String password, Long numericUserId) {
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(password);
+        credential.setTemporary(false);
+
+        Map<String, List<String>> attributes = new HashMap<>();
+        attributes.put("userId", List.of(numericUserId.toString()));
+
+        UserRepresentation user = new UserRepresentation();
+        user.setUsername(name);
+        user.setEmailVerified(true);
+        user.setEmail(email);
+        user.setEnabled(true);
+        user.setAttributes(attributes);
+        user.setCredentials(List.of(credential));
+
+        Response response = keycloak.realm(realm)
+                .users()
+                .create(user);
+
+        if(response.getStatus() == 409) {
+            throw new UserKeyClockAlreadyExistException(name, email);
+        }
+
+        String location = response.getHeaderString("Location");
+        String keycloakId = location.substring(location.lastIndexOf("/") + 1);
+        log.info("User created in Keycloak: keycloakId={}, userId={}",
+                keycloakId, numericUserId);
+
+        return keycloakId;
+    }
+
+    public Mono<TokenResponse> getToken(String name, String password) {
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "password");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("username", name);
+        body.add("password", password);
+
+        return webClient.post()
+                .uri("/realms/" + realm + "/protocol/openid-connect/token")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .body(BodyInserters.fromFormData(body))
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, r -> {
+                    throw new InvalidCredentialsException();
+                })
+                .bodyToMono(Map.class)
+                .map(response -> TokenResponse.builder()
+                        .accessToken((String) response.get("access_token"))
+                        .refreshToken((String) response.get("refresh_token"))
+                        .expiresIn(((Number) response.get("expires_in")).longValue())
+                        .build());
+    }
+
+    public void changePassword(String keycloakId, String newPassword) {
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(newPassword);
+        credential.setTemporary(false);
+
+        keycloak.realm(realm)
+                .users()
+                .get(keycloakId)
+                .resetPassword(credential);
+    }
+
+    public void updateUsername(String keycloakId, String newUsername) {
+        UserRepresentation user = keycloak.realm(realm)
+                .users()
+                .get(keycloakId)
+                .toRepresentation();
+
+        user.setUsername(newUsername);
+
+        keycloak.realm(realm)
+                .users()
+                .get(keycloakId)
+                .update(user);
+    }
+
+    public UserResponseDto getUserById(String keycloakId) {
+        try {
+            UserRepresentation userRepresentation = keycloak
+                    .realm(realm)
+                    .users()
+                    .get(keycloakId)
+                    .toRepresentation();
+            Long numericUserId = extractNumericUserId(userRepresentation);
+
+            return UserResponseDto.builder().keycloakId(keycloakId)
+                    .id(numericUserId)
+                    .email(userRepresentation.getEmail())
+                    .name(userRepresentation.getUsername())
+                    .build();
+        } catch (NotFoundException ex) {
+            throw new UserNotFoundException(keycloakId);
+        }
+    }
+
+    private Long extractNumericUserId(UserRepresentation user) {
+        Map<String, List<String>> attributes = user.getAttributes();
+
+        if (attributes == null || !attributes.containsKey("userId")) {
+            log.warn("NumericUserId attribute missing for user={}",
+                    user.getId());
+            throw new UserNotFoundException(user.getId());
+        }
+
+        return Long.parseLong(attributes.get("userId").get(0));
+    }
+}

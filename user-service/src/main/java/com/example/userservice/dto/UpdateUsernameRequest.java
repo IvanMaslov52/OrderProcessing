@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class LoginRequest {
+public class UpdateUsernameRequest {
+    @NotBlank
+    private String keycloakId;
     @NotBlank
     private String username;
-    @NotBlank
-    private String password;
 }
