@@ -6,8 +6,24 @@ spring:
     name: api-gateway
   cloud:
     gateway:
-      routes: []
+      routes:
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/**
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
 
+keycloak:
+  resourceserver:
+    jwt:
+     jwk-set-uri: http://localhost:8080/realms/user_service/protocol/openid-connect/certs
 eureka:
   client:
     service-url:
