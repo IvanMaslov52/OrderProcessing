@@ -21,7 +21,7 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
-                        .pathMatchers("/api/users/**").permitAll()
+                        .pathMatchers("/api/users/register", "/api/users/login").permitAll()
                         .anyExchange().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt( jwt -> jwt.jwkSetUri(jwkSetUri)))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(

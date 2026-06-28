@@ -6,12 +6,12 @@ spring:
     name: user-service
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
       password: admin
 
 keycloak:
-  server-url: http://localhost:8080
+  server-url: http://keycloak:8080
   realm: user_service
   client-id: springBootApplication
   client-secret: KGgfgCKmtW8fExfSwDt9wJLqkFT6xCpY
@@ -22,4 +22,4 @@ keycloak:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://eureka-server:8761/eureka/

@@ -50,14 +50,14 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @Cacheable(value = "order", key = "#userid")
     public List<OrderResponseDto> findOrdersByUserId(Long userid) {
         return orderRepository.findByUserId(userid).stream().map(mapper::toResponseDto).toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     @CacheEvict(value = "order", key = "#userid")
     public OrderResponseDto confirmOrder(Long id, Long userId) {
         Order foundedOrder = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));

@@ -23,8 +23,8 @@ spring:
 keycloak:
   resourceserver:
     jwt:
-     jwk-set-uri: http://localhost:8080/realms/user_service/protocol/openid-connect/certs
+     jwk-set-uri: http://keycloak:8080/realms/user_service/protocol/openid-connect/certs
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka
+      defaultZone: http://eureka-server:8761/eureka

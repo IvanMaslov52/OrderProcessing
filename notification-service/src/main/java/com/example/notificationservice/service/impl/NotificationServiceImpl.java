@@ -118,7 +118,7 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationCount readAllNotificationByUserId(Long userId) {
         List<OrderNotification> updatedList =
                 notificationRepository.findByUserId(userId).stream()
-                .filter(OrderNotification::getRead)
+                .filter(n -> !n.getRead())
                 .peek(n-> n.setRead(true))
                 .sorted(Comparator.comparing(OrderNotification::getCreatedAt))
                 .toList();
