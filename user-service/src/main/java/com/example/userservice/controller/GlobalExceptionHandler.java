@@ -2,6 +2,8 @@ package com.example.userservice.controller;
 
 import com.example.userservice.constants.AppConstants;
 import com.example.userservice.dto.ErrorResponse;
+import com.example.userservice.exception.InvalidCredentialsException;
+import com.example.userservice.exception.UserKeyClockAlreadyExistException;
 import com.example.userservice.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +27,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleApiException(UserNotFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getCode(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(InvalidCredentialsException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getCode(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(ex.getStatus()).body(error);
+    }
+
+    @ExceptionHandler(UserKeyClockAlreadyExistException.class)
+    public ResponseEntity<ErrorResponse> handleApiException(UserKeyClockAlreadyExistException ex) {
         ErrorResponse error = new ErrorResponse(
                 ex.getCode(),
                 ex.getMessage(),
