@@ -92,9 +92,9 @@ public class KeycloakService {
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .body(BodyInserters.fromFormData(body))
                 .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, r -> {
-                    throw new InvalidCredentialsException();
-                })
+                .onStatus(HttpStatusCode::is4xxClientError, r ->
+                    Mono.error(new InvalidCredentialsException())
+                )
                 .bodyToMono(Map.class)
                 .map(this::buildTokenResponse);
     }
