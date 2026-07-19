@@ -17,6 +17,7 @@ public class OrderDto {
     @NotBlank
     private String product;
     @Min(1)
+    @NotNull
     private Integer quantity;
     @NotNull
     @DecimalMin("0.01")

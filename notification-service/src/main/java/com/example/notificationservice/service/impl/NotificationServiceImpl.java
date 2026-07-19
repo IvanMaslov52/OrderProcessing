@@ -12,7 +12,6 @@ import com.example.notificationservice.model.OrderStatus;
 import com.example.notificationservice.repository.NotificationRepository;
 import com.example.notificationservice.service.NotificationMapper;
 import com.example.notificationservice.service.NotificationService;
-import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -81,14 +80,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationDto> getNotificationByUserId(Long userId) {
+    public List<NotificationDto> getNotificationByUserId(String userId) {
         return notificationRepository.findByUserId(userId).stream()
                 .map(mapper::notificationToDto)
                 .toList();
     }
 
     @Override
-    public List<NotificationDto> getUnreadNotificationByUserId(Long userId) {
+    public List<NotificationDto> getUnreadNotificationByUserId(String userId) {
         return notificationRepository.findByUserId(userId).stream()
                 .filter(orderNotification -> !orderNotification.getRead())
                 .sorted(Comparator.comparing(OrderNotification::getCreatedAt))
@@ -97,7 +96,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationCount getUnreadNotificationCountByUserId(Long userId) {
+    public NotificationCount getUnreadNotificationCountByUserId(String userId) {
         return new NotificationCount(notificationRepository.findByUserId(userId)
                 .stream()
                 .filter(n-> !n.getRead()).count());
@@ -115,7 +114,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public NotificationCount readAllNotificationByUserId(Long userId) {
+    public NotificationCount readAllNotificationByUserId(String userId) {
         List<OrderNotification> updatedList =
                 notificationRepository.findByUserId(userId).stream()
                 .filter(n -> !n.getRead())

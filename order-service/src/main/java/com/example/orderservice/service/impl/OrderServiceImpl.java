@@ -13,13 +13,11 @@ import com.example.orderservice.service.OrderMapper;
 import com.example.orderservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -35,7 +33,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderResponseDto saveOrder(Long userId, OrderDto orderDto) {
+    public OrderResponseDto saveOrder(String userId, OrderDto orderDto) {
         Order newOrder = mapper.toEntity(orderDto);
         newOrder.setUserId(userId);
         Order savedOrder = orderRepository.save(newOrder);
@@ -52,14 +50,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = "order", key = "#userid")
-    public List<OrderResponseDto> findOrdersByUserId(Long userid) {
+    public List<OrderResponseDto> findOrdersByUserId(String userid) {
         return orderRepository.findByUserId(userid).stream().map(mapper::toResponseDto).toList();
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "order", key = "#userid")
-    public OrderResponseDto confirmOrder(Long id, Long userId) {
+    @CacheEvict(value = "order", key = "#userId")
+    public OrderResponseDto confirmOrder(Long id, String userId) {
         Order foundedOrder = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         if(!foundedOrder.getStatus().equals(OrderStatus.PENDING)) {
             throw new InvalidStatusTransitionException(OrderStatus.PENDING.name(), id);
@@ -73,8 +71,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "order", key = "#userid")
-    public OrderResponseDto cancelOrder(Long id, Long userId) {
+    @CacheEvict(value = "order", key = "#userId")
+    public OrderResponseDto cancelOrder(Long id, String userId) {
         Order foundedOrder = orderRepository.findById(id).orElseThrow(() -> new OrderNotFoundException(id));
         if(!foundedOrder.getStatus().equals(OrderStatus.PENDING)) {
             throw new InvalidStatusTransitionException(OrderStatus.PENDING.name(), id);

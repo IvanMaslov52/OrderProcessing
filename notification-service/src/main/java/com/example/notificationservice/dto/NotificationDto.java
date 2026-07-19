@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class NotificationDto {
     private Long orderId;
-    private Long userId;
+    private String userId;
     private String title;
     private String message;
     private Boolean read;

@@ -46,14 +46,13 @@ public class KeycloakService {
     @Value("${keycloak.client-secret}")
     private String clientSecret;
 
-    public String createUser(String email, String name, String password, Long numericUserId) {
+    public String createUser(String email, String name, String password) {
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
         credential.setValue(password);
         credential.setTemporary(false);
 
         Map<String, List<String>> attributes = new HashMap<>();
-        attributes.put("userId", List.of(numericUserId.toString()));
 
         UserRepresentation user = new UserRepresentation();
         user.setUsername(name);
@@ -73,8 +72,7 @@ public class KeycloakService {
 
         String location = response.getHeaderString("Location");
         String keycloakId = location.substring(location.lastIndexOf("/") + 1);
-        log.info("User created in Keycloak: keycloakId={}, userId={}",
-                keycloakId, numericUserId);
+        log.info("User created in Keycloak: keycloakId={}", keycloakId);
 
         return keycloakId;
     }
@@ -86,6 +84,9 @@ public class KeycloakService {
         body.add("client_secret", clientSecret);
         body.add("username", name);
         body.add("password", password);
+        System.out.println(name);
+        System.out.println(password);
+
 
         return webClient.post()
                 .uri("/realms/" + realm + "/protocol/openid-connect/token")
@@ -132,28 +133,14 @@ public class KeycloakService {
                     .users()
                     .get(keycloakId)
                     .toRepresentation();
-            Long numericUserId = extractNumericUserId(userRepresentation);
 
             return UserResponseDto.builder().keycloakId(keycloakId)
-                    .id(numericUserId)
                     .email(userRepresentation.getEmail())
                     .name(userRepresentation.getUsername())
                     .build();
         } catch (NotFoundException ex) {
             throw new UserNotFoundException(keycloakId);
         }
-    }
-
-    private Long extractNumericUserId(UserRepresentation user) {
-        Map<String, List<String>> attributes = user.getAttributes();
-
-        if (attributes == null || !attributes.containsKey("userId")) {
-            log.warn("NumericUserId attribute missing for user={}",
-                    user.getId());
-            throw new UserNotFoundException(user.getId());
-        }
-
-        return Long.parseLong(attributes.get("userId").get(0));
     }
 
     private TokenResponse buildTokenResponse(Map<String, Object> response) {

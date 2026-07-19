@@ -1,7 +1,6 @@
 package com.example.userservice.service.impl;
 
 import com.example.userservice.dto.*;
-import com.example.userservice.service.IdGeneratorService;
 import com.example.userservice.service.KeycloakService;
 import com.example.userservice.service.UserService;
 import lombok.AllArgsConstructor;
@@ -14,16 +13,12 @@ public class UserServiceImpl implements UserService {
 
     private final KeycloakService keycloakService;
 
-    private final IdGeneratorService idGeneratorService;
     @Override
     public UserResponseDto registerUser(RegisterRequest registerRequest) {
-        Long numericLongId = idGeneratorService.nextId();
         String keycloakId = keycloakService.createUser(registerRequest.getEmail(),
                 registerRequest.getName(),
-                registerRequest.getPassword(),
-                numericLongId);
+                registerRequest.getPassword());
         return UserResponseDto.builder().
-                id(numericLongId).
                 name(registerRequest.getName()).
                 email(registerRequest.getEmail()).
                 keycloakId(keycloakId).
@@ -36,14 +31,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto updatePassword(UpdatePasswordRequest updatePasswordRequest) {
-        keycloakService.changePassword(updatePasswordRequest.getKeycloakId(), updatePasswordRequest.getPassword());
-        return keycloakService.getUserById(updatePasswordRequest.getKeycloakId());
+    public UserResponseDto updatePassword(String userId, UpdatePasswordRequest updatePasswordRequest) {
+        keycloakService.changePassword(userId, updatePasswordRequest.getPassword());
+        return keycloakService.getUserById(userId);
     }
 
     @Override
-    public UserResponseDto updateUsername(UpdateUsernameRequest updateUsernameRequest) {
-        keycloakService.updateUsername(updateUsernameRequest.getKeycloakId(), updateUsernameRequest.getUsername());
-        return keycloakService.getUserById(updateUsernameRequest.getKeycloakId());
+    public UserResponseDto updateUsername(String userId, UpdateUsernameRequest updateUsernameRequest) {
+        keycloakService.updateUsername(userId, updateUsernameRequest.getUsername());
+        return keycloakService.getUserById(userId);
     }
 }

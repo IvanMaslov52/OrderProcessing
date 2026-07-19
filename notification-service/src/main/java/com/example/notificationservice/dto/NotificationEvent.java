@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class NotificationEvent {
     private Long orderId;
-    private Long userId;
+    private String userId;
     private String product;
     private BigDecimal totalPrice;
     private OrderStatus status;

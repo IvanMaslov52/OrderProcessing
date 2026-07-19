@@ -8,7 +8,7 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends MongoRepository<OrderNotification, String> {
-    List<OrderNotification> findByUserId(Long userId);
+    List<OrderNotification> findByUserId(String userId);
 
     Boolean existsByOrderIdAndEventType(Long orderId, EventType eventType);
 }

@@ -25,12 +25,12 @@ public class NotificationController {
     }
 
     @GetMapping("/unread")
-    public ResponseEntity<List<NotificationDto>> getUnreadNotificationByUser(@RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<List<NotificationDto>> getUnreadNotificationByUser(@RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(notificationService.getUnreadNotificationByUserId(userId));
     }
 
     @GetMapping("/unread/count")
-    public ResponseEntity<NotificationCount> getUnreadCountNotificationByUser(@RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<NotificationCount> getUnreadCountNotificationByUser(@RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(notificationService.getUnreadNotificationCountByUserId(userId));
     }
 
@@ -40,7 +40,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/read-all")
-    public ResponseEntity<NotificationCount> getNotificationByUser(@RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<NotificationCount> getNotificationByUser(@RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(notificationService.readAllNotificationByUserId(userId));
     }
 }

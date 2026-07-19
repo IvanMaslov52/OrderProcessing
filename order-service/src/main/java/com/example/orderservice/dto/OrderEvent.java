@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class OrderEvent {
     private Long orderId;
 
-    private Long userId;
+    private String userId;
 
     private String product;
 

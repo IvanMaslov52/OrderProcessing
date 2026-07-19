@@ -14,7 +14,7 @@ keycloak:
   server-url: http://keycloak:8080
   realm: user_service
   client-id: springBootApplication
-  client-secret: KGgfgCKmtW8fExfSwDt9wJLqkFT6xCpY
+  client-secret: zlwI6cE3o3Wt7lUR25AzkmQM6NRaHVVq
   admin:
     username: admin
     password: admin

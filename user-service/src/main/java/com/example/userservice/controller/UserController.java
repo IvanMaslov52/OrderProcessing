@@ -24,12 +24,12 @@ public class UserController {
     }
 
     @PostMapping("/edit/username")
-    public UserResponseDto updateUsername(@Valid @RequestBody UpdateUsernameRequest request) {
-        return userService.updateUsername(request);
+    public UserResponseDto updateUsername(@RequestHeader("X-User-Id") String userId, @Valid @RequestBody UpdateUsernameRequest request) {
+        return userService.updateUsername(userId, request);
     }
 
     @PostMapping("/edit/password")
-    public UserResponseDto updatePassword(@Valid @RequestBody UpdatePasswordRequest request) {
-        return userService.updatePassword(request);
+    public UserResponseDto updatePassword(@RequestHeader("X-User-Id") String userId, @Valid @RequestBody UpdatePasswordRequest request) {
+        return userService.updatePassword(userId, request);
     }
 }

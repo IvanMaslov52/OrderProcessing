@@ -9,7 +9,7 @@ public interface UserService {
 
     Mono<TokenResponse> authorization(LoginRequest loginRequest);
 
-    UserResponseDto updatePassword(UpdatePasswordRequest updatePasswordRequest);
+    UserResponseDto updatePassword(String userId, UpdatePasswordRequest updatePasswordRequest);
 
-    UserResponseDto updateUsername(UpdateUsernameRequest updateUsernameRequest);
+    UserResponseDto updateUsername(String userId, UpdateUsernameRequest updateUsernameRequest);
 }

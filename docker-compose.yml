@@ -63,6 +63,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U keycloak" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   keycloak:
     image: quay.io/keycloak/keycloak:22.0
@@ -123,7 +128,7 @@ services:
       - eureka-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/orders_db
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_REDIS_HOST: redis
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
 
@@ -136,7 +141,7 @@ services:
       - eureka-server
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://admin:admin@mongodb:27017/notifications?authSource=admin
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
 
 volumes:

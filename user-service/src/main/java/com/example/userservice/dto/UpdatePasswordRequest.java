@@ -7,8 +7,6 @@ import lombok.Data;
 @Data
 public class UpdatePasswordRequest {
     @NotBlank
-    private String keycloakId;
-    @NotBlank
     @Size(min = 6)
     private String password;
 }

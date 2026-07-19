@@ -20,7 +20,7 @@ public class Order {
     private Long orderId;
 
     @Column(name = "user_id")
-    private Long userId;
+    private String userId;
 
     @Column(name = "product")
     private String product;

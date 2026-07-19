@@ -22,15 +22,15 @@ public interface NotificationService {
 
     NotificationDto getNotificationById(String id);
 
-    List<NotificationDto> getNotificationByUserId(Long userId);
+    List<NotificationDto> getNotificationByUserId(String userId);
 
-    List<NotificationDto> getUnreadNotificationByUserId(Long userId);
+    List<NotificationDto> getUnreadNotificationByUserId(String userId);
 
-    NotificationCount getUnreadNotificationCountByUserId(Long userId);
+    NotificationCount getUnreadNotificationCountByUserId(String userId);
 
     NotificationResponse readNotificationById(String id);
 
-    NotificationCount readAllNotificationByUserId(Long userId);
+    NotificationCount readAllNotificationByUserId(String userId);
 
     EventType setEventTypeByStatus(OrderStatus status);
 }
