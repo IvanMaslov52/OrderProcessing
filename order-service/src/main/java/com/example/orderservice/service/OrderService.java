@@ -2,12 +2,18 @@ package com.example.orderservice.service;
 
 import com.example.orderservice.dto.OrderDto;
 import com.example.orderservice.dto.OrderEvent;
-import com.example.orderservice.model.Order;
+import com.example.orderservice.dto.OrderResponseDto;
+
+import java.util.List;
 
 public interface OrderService {
-    void saveOrder(OrderDto orderDto);
+    OrderResponseDto saveOrder(String userId, OrderDto orderDto);
 
-    OrderEvent orderToEvent(Order order);
+    OrderEvent findOrderById(Long id);
 
-    Order findOrderById(Long id);
+    List<OrderResponseDto> findOrdersByUserId(String userid);
+
+    OrderResponseDto confirmOrder(Long id, String userId);
+
+    OrderResponseDto cancelOrder(Long id, String userId);
 }

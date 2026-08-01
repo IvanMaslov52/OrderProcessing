@@ -1,27 +1,48 @@
 package com.example.orderservice.controller;
 
-import com.example.orderservice.model.Order;
+import com.example.orderservice.dto.OrderEvent;
+import com.example.orderservice.dto.OrderResponseDto;
 import com.example.orderservice.service.OrderService;
 import com.example.orderservice.dto.OrderDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
 
-    @PostMapping("/send")
-    public String send(@RequestBody OrderDto orderDto) {
-       orderService.saveOrder(orderDto);
-        return "Сообщение отправлено";
+    @PostMapping("/create")
+    public ResponseEntity<OrderResponseDto> createOrder(@RequestHeader("X-User-Id") String userId, @Valid @RequestBody OrderDto orderDto) {
+       return ResponseEntity.ok(orderService.saveOrder(userId, orderDto));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrder(@PathVariable("id") Long id) {
-        return ResponseEntity.ok(orderService.findOrderById(id));
+    /*
+    * Тестовый endpoint для просмотра конкретного Order
+    * */
+    @GetMapping("/{orderId}")
+    public ResponseEntity<OrderEvent> getOrder(@PathVariable("orderId") Long orderId) {
+        return ResponseEntity.ok(orderService.findOrderById(orderId));
+    }
+
+    @GetMapping("/user")
+    public ResponseEntity<List<OrderResponseDto>> getOrdersByUserId(@RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(orderService.findOrdersByUserId(userId));
+    }
+
+    @PatchMapping ("/{orderId}/cancel")
+    public ResponseEntity<OrderResponseDto> cancelOrder(@PathVariable("orderId") Long orderId, @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(orderService.cancelOrder(orderId, userId));
+    }
+
+    @PatchMapping ("/{orderId}/confirm")
+    public ResponseEntity<OrderResponseDto> confirmOrder(@PathVariable("orderId") Long orderId, @RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(orderService.confirmOrder(orderId, userId));
     }
 }

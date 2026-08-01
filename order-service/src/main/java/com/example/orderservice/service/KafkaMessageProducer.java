@@ -1,28 +1,31 @@
 package com.example.orderservice.service;
 
-import com.example.orderservice.model.Order;
+import com.example.orderservice.dto.OrderEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
-
 
 @Service
 @RequiredArgsConstructor
 public class KafkaMessageProducer {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaMessageProducer.class);
-    private final KafkaTemplate<String, Order> kafkaTemplate;
+    @Value("${spring.kafka.topics.orders}")
+    private String ordersTopicName;
 
-    public void sendMessage(String topic, String key, Order order) {
-        kafkaTemplate.send(topic, key, order)
+    private static final Logger log = LoggerFactory.getLogger(KafkaMessageProducer.class);
+    private final KafkaTemplate<String, OrderEvent> kafkaTemplate;
+
+    public void sendMessage(String key, OrderEvent orderEvent) {
+        kafkaTemplate.send(ordersTopicName, key, orderEvent)
                 .whenComplete((result, ex) -> {
                     if(ex == null) {
                         log.info("Сообщения отправлено в [{}] partition={}, offset={}",
-                                topic, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
+                                ordersTopicName, result.getRecordMetadata().partition(), result.getRecordMetadata().offset());
                     } else {
-                        log.error("Ошибка отправки сообщения в [{}]: {}", topic, ex.getMessage(), ex);
+                        log.error("Ошибка отправки сообщения в [{}]: {}", ordersTopicName, ex.getMessage(), ex);
                     }
                 });
     }

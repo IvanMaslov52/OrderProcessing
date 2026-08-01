@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class NotificationDto {
-    public Long orderId;
-    public Long userId;
+    private Long orderId;
+    private String userId;
     private String title;
     private String message;
     private Boolean read;

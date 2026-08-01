@@ -9,7 +9,7 @@
             <column name="order_id" type="bigint" defaultValueSequenceNext="order_id_seq">
                 <constraints primaryKey="true" nullable="false" />
             </column>
-            <column name="user_id" type="bigint">
+            <column name="user_id" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
             <column name="product" type="varchar(255)">
