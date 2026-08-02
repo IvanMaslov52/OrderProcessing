@@ -1,6 +1,5 @@
 package com.example.orderservice.service;
 
-import com.example.orderservice.dto.OrderEvent;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +15,9 @@ public class KafkaMessageProducer {
     private String ordersTopicName;
 
     private static final Logger log = LoggerFactory.getLogger(KafkaMessageProducer.class);
-    private final KafkaTemplate<String, OrderEvent> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
-    public void sendMessage(String key, OrderEvent orderEvent) {
+    public void sendMessage(String key, String orderEvent) {
         kafkaTemplate.send(ordersTopicName, key, orderEvent)
                 .whenComplete((result, ex) -> {
                     if(ex == null) {

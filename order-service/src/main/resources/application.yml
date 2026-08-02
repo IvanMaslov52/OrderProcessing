@@ -26,12 +26,9 @@ spring:
     bootstrap-servers: kafka:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all          # at-least-once
       retries: 3
-      properties:
-        spring.json.add.type.headers: false
-        enable.idempotence: true
   liquibase:
     change-log: classpath:/changelog/changelog-master.xml
   data:
