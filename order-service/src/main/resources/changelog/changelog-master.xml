@@ -25,4 +25,22 @@
             <column name="created_at" type="timestamp without time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
     </changeSet>
+    <changeSet id="Creating outbox table" author="iamaslov">
+        <createTable tableName="outbox">
+            <column name="outbox_id" type="UUID" value="get_random_uuid()">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="event_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payload" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp without time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="sent_at" type="timestamp without time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
 </databaseChangeLog>

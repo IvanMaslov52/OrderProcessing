@@ -1,6 +1,8 @@
 package com.example.notificationservice.service;
 
 import com.example.notificationservice.dto.NotificationEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -15,11 +17,18 @@ public class KafkaObjectConsumer {
 
     private final NotificationService notificationService;
 
+    private final ObjectMapper objectMapper;
+
     @KafkaListener(topics = "order-notification")
-    public void consume(NotificationEvent notificationEvent, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
+    public void consume(String message, @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
                         @Header(KafkaHeaders.OFFSET) long offset) {
-        notificationService.saveNotification(notificationEvent);
-        log.info("Получено событие из partition={}, offset={}: {}", partition, offset, notificationEvent);
+        try {
+            NotificationEvent notificationEvent = objectMapper.readValue(message, NotificationEvent.class);
+            notificationService.saveNotification(notificationEvent);
+            log.info("Получено событие из partition={} offset={}: {}", partition, offset, notificationEvent);
+        } catch (JsonProcessingException e) {
+            log.info("Ошибка при парсинге объект OrderEvent из кафка = {}", e.getMessage());
+        }
     }
 
 }
